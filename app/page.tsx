@@ -1,103 +1,163 @@
-import Image from "next/image";
+'use client'
+
+import FilterContainer from "@/components/FilterContainer";
+import StarIcon from "@/components/Star";
+import { useWatchList } from "@/lib/context/WatchListContext";
+import { Coin } from "@/lib/hooks/types";
+import useFetchCoinList from "@/lib/hooks/useFetchCoinList";
+import { useRouter } from "next/navigation";
+
+import { useState, useEffect, useCallback } from "react";
+
 
 export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  
+  const [page, setPage] = useState(1);
+  const items=50;
+  const coins = useFetchCoinList();
+  const router = useRouter()
+  const {addToWatchList, removeFromWatchList, isSaved} = useWatchList() 
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  const [filteredCoins, setFiltered] = useState<Coin[]>([])
+  
+  useEffect(() => {
+    setFiltered(coins);
+  }, [coins]);
+
+  const totalPage = Math.ceil(filteredCoins.length/items)
+  const currentItems = filteredCoins.slice(
+    (page-1) * items, page * items
+  )
+
+  const paginate = (pageNumber: number)=> setPage(pageNumber)
+
+  const handleRowClick = (id: string) => router.push(`/${id}`)
+
+  const handleFilterChange = useCallback((filteredCoins: Coin[]) => {
+    setFiltered(filteredCoins)
+    setPage(1)
+  },[])
+
+  return (
+    <div className="min-h-screen bg-gray-50 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Cryptocurrency Prices</h1>
+          <p className="text-gray-600">Track the latest cryptocurrency prices and market data</p>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+
+        <div className="mb-6">
+          <FilterContainer coins={coins} onFilteredChange={handleFilterChange} />
+        </div>
+
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Rank
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Name
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Symbol
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Price
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    24h %
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Volume
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Save
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {currentItems.map((coin) => (
+                  <tr 
+                    key={coin.id} 
+                    onClick={() => handleRowClick(coin.id)} 
+                    style={{cursor: 'pointer'}}
+                  >
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      {coin.market_cap_rank}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      {coin.name}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 uppercase">
+                      {coin.symbol}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      ${coin.current_price?.toLocaleString()}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <span className={`${
+                        coin.price_change_percentage_24h >= 0 
+                          ? 'text-green-600' 
+                          : 'text-red-600'
+                      }`}>
+                        {coin.price_change_percentage_24h >= 0 ? '+' : ''}
+                        {coin.price_change_percentage_24h?.toFixed(2)}%
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      ${coin.total_volume?.toLocaleString()}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <div onClick={(e) => e.stopPropagation()}>
+                        <StarIcon coin={coin} size={20} />
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between mt-6">
+          
+          <div className="flex space-x-2">
+            <button 
+              onClick={() => setPage(prev => Math.max(prev-1, 1))} 
+              disabled={page === 1}
+              className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-150"
+            >
+              Previous
+            </button>
+            
+            {Array.from({length: Math.min(5, totalPage)}, (_, i) => i + 1).map(number => (
+              <button 
+                key={number} 
+                onClick={() => paginate(number)}
+                className={`px-3 py-2 text-sm font-medium rounded-md transition-colors duration-150 ${
+                  page === number
+                    ? 'bg-blue-600 text-white'
+                    : 'text-gray-500 bg-white border border-gray-300 hover:bg-gray-50'
+                }`}
+              >
+                {number}
+              </button>
+            ))}
+            
+            <button 
+              onClick={() => setPage(prev => Math.min(prev+1, totalPage))} 
+              disabled={page === totalPage}
+              className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-150"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
+    
   );
 }
