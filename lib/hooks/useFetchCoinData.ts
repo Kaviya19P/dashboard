@@ -1,5 +1,4 @@
 
-import { notFound } from "next/navigation"
 import { useEffect, useRef, useState } from "react"
 
 type CoinDetail = {
